@@ -1,63 +1,68 @@
-import Image from "next/image";
+import Link from 'next/link';
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+      {/* Header / Topo */}
+      <header className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+        <h1 className="text-xl font-bold tracking-tight text-indigo-600">Meu Livro Oficial</h1>
+        <Link 
+          href="/checkout" 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition"
+        >
+          Comprar Agora
+        </Link>
+      </header>
+
+      {/* Seção Principal (Hero) */}
+      <main className="max-w-6xl mx-auto px-4 py-12 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+        
+        {/* Lado Esquerdo: Imagem da Capa */}
+        <div className="flex justify-center">
+          <div className="w-72 h-96 md:w-96 md:h-[500px] bg-indigo-900 rounded-lg shadow-2xl flex items-center justify-center text-white text-center p-6 transform hover:scale-105 transition duration-300">
+            <div>
+              <p className="text-sm uppercase tracking-widest text-indigo-300 mb-2">Livro Físico & E-book</p>
+              <h2 className="text-3xl font-extrabold mb-4">[Título do Seu Livro Aqui]</h2>
+              <p className="text-xs text-indigo-200">Subtítulo chamativo ou frase de efeito sobre a obra.</p>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Lado Direito: Textos Chamativos */}
+        <div className="space-y-6">
+          <span className="text-sm font-semibold tracking-wide text-indigo-600 uppercase bg-indigo-50 px-3 py-1 rounded-full">
+            Lançamento Exclusivo
+          </span>
+          <h3 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 leading-tight">
+            Descubra o método definitivo para alcançar seus objetivos.
+          </h3>
+          <p className="text-lg text-gray-600 leading-relaxed">
+            Escreva aqui uma sinopse matadora do seu livro. Explique qual dor ele resolve, o que o leitor vai aprender nas páginas e por que ele não pode deixar essa oportunidade passar.
+          </p>
+
+          {/* Formatos e Preços */}
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <p className="text-sm font-medium text-gray-500">Versão E-book</p>
+              <p className="text-2xl font-bold text-gray-800">R$ 29,90</p>
+              <p className="text-xs text-green-600 font-medium">✨ Envio imediato por e-mail</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <p className="text-sm font-medium text-gray-500">Livro Físico</p>
+              <p className="text-2xl font-bold text-gray-800">R$ 59,90</p>
+              <p className="text-xs text-gray-500">+ frete para todo o Brasil</p>
+            </div>
+          </div>
+
+          {/* Botão de Ação */}
+          <div className="pt-4">
+            <Link 
+              href="/checkout" 
+              className="block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-4 px-8 rounded-xl shadow-lg shadow-indigo-200 transition duration-200 transform active:scale-95"
+            >
+              Quero Garantir Meu Exemplar
+            </Link>
+          </div>
         </div>
       </main>
     </div>
