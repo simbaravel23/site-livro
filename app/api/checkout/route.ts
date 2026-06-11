@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     } = corpo;
 
     // 1. Cria ou busca o cliente baseado no e-mail (evita duplicar o cliente se ele comprar de novo)
-    const prisma = new PrismaClient({});
+    const prisma = new PrismaClient();
     try {
       const cliente = await prisma.cliente.upsert({
       where: { email },
@@ -40,9 +40,9 @@ export async function POST(request: Request) {
       data: {
         clienteId: cliente.id,
         tipoLivro,
-        valorTotal,
+        valorTotal: Number(valorTotal),
         statusPagamento: 'pendente',
-        statusEnvio: tipoLivro === 'ebook' ? 'nao_aplicavel' : 'nao_aplicavel', 
+        statusEnvio: 'nao_aplicavel',
       },
     });
 
@@ -106,7 +106,8 @@ export async function POST(request: Request) {
     }
 
   } catch (error: any) {
-    console.error('Erro no Checkout API:', error);
-    return NextResponse.json({ error: 'Erro interno ao salvar o pedido.' }, { status: 500 });
+    console.error('Erro no Checkout API:', error?.message || error, error?.stack || 'no-stack');
+    const devMsg = process.env.NODE_ENV !== 'production' ? (error?.message || String(error)) : 'Erro interno ao salvar o pedido.';
+    return NextResponse.json({ error: devMsg }, { status: 500 });
   }
 }
