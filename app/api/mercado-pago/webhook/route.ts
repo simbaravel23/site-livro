@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
+// Do not instantiate PrismaClient at module scope to avoid runtime initialization during build
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
@@ -63,14 +62,19 @@ export async function POST(request: Request) {
     }
 
     // Atualiza o pedido no banco
-    await prisma.pedido.update({
-      where: { id: pedidoId },
-      data: { statusPagamento: novoStatus },
-    });
+    const prisma = new PrismaClient();
+    try {
+      await prisma.pedido.update({
+        where: { id: pedidoId },
+        data: { statusPagamento: novoStatus },
+      });
 
-    console.log(`Pedido ${pedidoId} atualizado para statusPagamento=${novoStatus}`);
+      console.log(`Pedido ${pedidoId} atualizado para statusPagamento=${novoStatus}`);
 
-    return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true });
+    } finally {
+      await prisma.$disconnect();
+    }
   } catch (err) {
     console.error('Erro no webhook Mercado Pago:', err);
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });

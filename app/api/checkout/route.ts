@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 export async function POST(request: Request) {
   try {
     const corpo = await request.json();
@@ -13,30 +11,32 @@ export async function POST(request: Request) {
     } = corpo;
 
     // 1. Cria ou busca o cliente baseado no e-mail (evita duplicar o cliente se ele comprar de novo)
-    const cliente = await prisma.cliente.upsert({
+    const prisma = new PrismaClient();
+    try {
+      const cliente = await prisma.cliente.upsert({
       where: { email },
       update: { nome, telefone },
       create: { nome, email, telefone },
     });
 
     // 2. Se for livro físico, salva o endereço atrelado a esse cliente
-    if (tipoLivro === 'fisico') {
-      await prisma.endereco.create({
-        data: {
-          clienteId: cliente.id,
-          cep,
-          rua,
-          numero,
-          complemento,
-          bairro,
-          cidade,
-          estado,
-        },
-      });
-    }
+      if (tipoLivro === 'fisico') {
+        await prisma.endereco.create({
+          data: {
+            clienteId: cliente.id,
+            cep,
+            rua,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+          },
+        });
+      }
 
     // 3. Registra o pedido como "pendente" no banco de dados
-    const pedido = await prisma.pedido.create({
+      const pedido = await prisma.pedido.create({
       data: {
         clienteId: cliente.id,
         tipoLivro,
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     });
 
     // 4. Criar preferência no Mercado Pago
-    try {
+      try {
       const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         auto_return: 'approved',
       };
 
-      const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,20 +87,22 @@ export async function POST(request: Request) {
         body: JSON.stringify(mpBody),
       });
 
-      if (!mpRes.ok) {
-        const txt = await mpRes.text();
-        console.error('Erro criando preferência MP:', mpRes.status, txt);
+        if (!mpRes.ok) {
+          const txt = await mpRes.text();
+          console.error('Erro criando preferência MP:', mpRes.status, txt);
+          return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
+        }
+
+        const pref = await mpRes.json();
+
+        // Retorna a URL de checkout para o frontend redirecionar
+        return NextResponse.json({ success: true, pedidoId: pedido.id, preferenceUrl: pref.init_point }, { status: 201 });
+      } catch (mpError) {
+        console.error('Erro na integração com Mercado Pago:', mpError);
         return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
       }
-
-      const pref = await mpRes.json();
-
-      // Retorna a URL de checkout para o frontend redirecionar
-      return NextResponse.json({ success: true, pedidoId: pedido.id, preferenceUrl: pref.init_point }, { status: 201 });
-
-    } catch (mpError) {
-      console.error('Erro na integração com Mercado Pago:', mpError);
-      return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
+    } finally {
+      await prisma.$disconnect();
     }
 
   } catch (error: any) {
