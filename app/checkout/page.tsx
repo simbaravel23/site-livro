@@ -60,7 +60,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-[#021124] text-slate-100 font-sans antialiased">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
         <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">Cadastro do Comprador</h2>
         <p className="text-gray-500 text-center mb-8">Preencha seus dados para garantir o seu livro</p>
