@@ -27,3 +27,39 @@ Notes
 - Keep production credentials secret; use Render's environment variable UI or the secret store.
 - Ensure your `MERCADO_PAGO_ACCESS_TOKEN` is the correct environment (sandbox token for tests, production token for live payments).
 - If you need webhooks to automatically update orders when payments change, configure Mercado Pago IPN/webhooks and create an API route to receive notifications.
+
+Checklist final e boas práticas
+
+- Do NOT commit `.env` with secrets. Use `.env.example` as a template (this repo contains `.env.example`).
+- On Render, add the following environment variables (set them via the service UI or secrets):
+   - `DATABASE_URL` (Postgres connection string)
+   - `MERCADO_PAGO_ACCESS_TOKEN` (server-side secret)
+   - `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` (public key)
+   - `NEXT_PUBLIC_SITE_URL` (deployed domain, e.g. https://my-app.onrender.com)
+   - `NODE_ENV=production` (optional)
+
+- Do NOT set `PORT` manually on Render — Render provides the port automatically and `start` uses `$PORT`.
+
+- Migrations: Render will run `npx prisma migrate deploy` before start (configured in `render.yaml`). Verify your Postgres user can run migrations.
+
+- Webhooks: After deploy, register the webhook URL in Mercado Pago pointing to:
+   `https://<your-domain>/api/mercado-pago/webhook`
+
+- Health check: optionally add a health-check path `/` or `/api/health` in the service settings.
+
+Local test steps before pushing
+
+```bash
+# install deps and generate prisma client
+npm ci
+npx prisma generate
+
+# apply migrations (against your local DB)
+npx prisma migrate deploy
+
+# build and run locally (example)
+npm run build
+PORT=3001 npm run start
+```
+
+If you want, I can remove secrets from `.env` and keep only non-sensitive local defaults, and add instructions to `.gitignore` to ensure `.env` is not committed.
