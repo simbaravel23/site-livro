@@ -11,7 +11,7 @@ export default function LandingPage() {
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
             <span className="text-xl font-black tracking-tight text-white uppercase">
-              REGENERA<span className="text-emerald-400 font-medium text-sm lowercase">.livro</span>
+              REGENERAR<span className="text-emerald-400 font-medium text-sm lowercase">.livro</span>
             </span>
           </div>
           <Link 
