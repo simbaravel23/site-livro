@@ -5,7 +5,7 @@ Render deployment steps
 2. In Render dashboard, create a new "Web Service" with these settings:
    - Environment: Node
    - Branch: main (or your chosen branch)
-   - Build Command: `npm ci && npm run build`
+   - Build Command: `npm ci && npx prisma generate && npm run build`
    - Start Command: `npm run start`
 
 3. Add the required environment variables in the Render service settings (do NOT commit these to git):
