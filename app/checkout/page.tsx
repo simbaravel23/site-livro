@@ -47,8 +47,13 @@ export default function CheckoutPage() {
       const resultado = await response.json();
 
       if (response.ok) {
-        setMensagem('✨ Cadastro e pedido salvos com sucesso no PostgreSQL!');
-        // Aqui no futuro você redirecionará para a tela de pagamento
+          // Se o backend retornou a URL de preferência do Mercado Pago, redireciona para lá
+          if (resultado.preferenceUrl) {
+            window.location.href = resultado.preferenceUrl;
+            return;
+          }
+
+          setMensagem('✨ Cadastro e pedido salvos com sucesso no PostgreSQL!');
       } else {
         setMensagem(`❌ Erro: ${resultado.error}`);
       }
