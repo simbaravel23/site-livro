@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     }
 
     // Atualiza o pedido no banco
-    const prisma = new PrismaClient();
+    const prisma = new PrismaClient({});
     try {
       await prisma.pedido.update({
         where: { id: pedidoId },

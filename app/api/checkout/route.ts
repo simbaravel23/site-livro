@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     } = corpo;
 
     // 1. Cria ou busca o cliente baseado no e-mail (evita duplicar o cliente se ele comprar de novo)
-    const prisma = new PrismaClient();
+    const prisma = new PrismaClient({});
     try {
       const cliente = await prisma.cliente.upsert({
       where: { email },
