@@ -4,6 +4,12 @@ import prisma from '../../../lib/prisma';
 export async function POST(request: Request) {
   try {
     const corpo = await request.json();
+    const maskUrl = (u?: string) => {
+      if (!u) return '<not set>';
+      return u.replace(/\/\/(.*?)@/, '//****@');
+    };
+    console.log('Checkout POST - NODE_ENV:', process.env.NODE_ENV, 'DATABASE_URL:', maskUrl(process.env.DATABASE_URL));
+    console.log('Checkout body (email,tipoLivro):', { email: corpo?.email, tipoLivro: corpo?.tipoLivro });
     
     const { 
       nome, email, telefone, tipoLivro, valorTotal,
@@ -49,6 +55,8 @@ export async function POST(request: Request) {
       try {
       const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+      console.log('Mercado Pago token present:', !!MP_ACCESS_TOKEN);
 
       if (!MP_ACCESS_TOKEN) {
         console.warn('MERCADO_PAGO_ACCESS_TOKEN não definido — retornando apenas pedido salvo.');
