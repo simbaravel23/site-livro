@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
 
 model Cliente {
   id           Int        @id @default(autoincrement())
@@ -16,6 +16,7 @@ model Cliente {
   enderecos    Endereco[]
   pedidos      Pedido[]
 }
+
 
 model Endereco {
   id          Int     @id @default(autoincrement())
