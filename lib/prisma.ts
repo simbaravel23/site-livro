@@ -6,11 +6,23 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL || '';
-const adapter = new PrismaPg({ connectionString });
+const maskUrl = (u?: string) => {
+  if (!u) return '<not set>';
+  return u.replace(/\/\/(.*?)@/, '//****@');
+};
 
-const client = global.prisma || new PrismaClient({ adapter } as any);
+let client: PrismaClient;
+try {
+  const connectionString = process.env.DATABASE_URL || '';
+  const adapter = new PrismaPg({ connectionString });
+  client = global.prisma || new PrismaClient({ adapter } as any);
 
-if (process.env.NODE_ENV !== 'production') global.prisma = client;
+  if (process.env.NODE_ENV !== 'production') global.prisma = client;
+} catch (err) {
+  console.error('Prisma initialization failed. DATABASE_URL:', maskUrl(process.env.DATABASE_URL));
+  console.error(err?.message || err);
+  // Re-throw so the application fails early and logs show the root cause
+  throw err;
+}
 
 export default client;
