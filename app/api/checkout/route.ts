@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +11,6 @@ export async function POST(request: Request) {
     } = corpo;
 
     // 1. Cria ou busca o cliente baseado no e-mail (evita duplicar o cliente se ele comprar de novo)
-    const prisma = new PrismaClient();
     try {
       const cliente = await prisma.cliente.upsert({
       where: { email },
@@ -102,7 +101,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
       }
     } finally {
-      await prisma.$disconnect();
+      // Do not disconnect shared client here; let process exit handle it.
     }
 
   } catch (error: any) {
