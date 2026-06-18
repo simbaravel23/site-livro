@@ -20,7 +20,7 @@ try {
   if (process.env.NODE_ENV !== 'production') global.prisma = client;
 } catch (err) {
   console.error('Prisma initialization failed. DATABASE_URL:', maskUrl(process.env.DATABASE_URL));
-  console.error(err?.message || err);
+  console.error((err as any)?.message || String(err));
   // Re-throw so the application fails early and logs show the root cause
   throw err;
 }
