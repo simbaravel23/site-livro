@@ -4,10 +4,12 @@ import prisma from '../../../lib/prisma';
 export async function POST(request: Request) {
   try {
     const corpo = await request.json();
+    
     const maskUrl = (u?: string) => {
       if (!u) return '<not set>';
       return u.replace(/\/\/(.*?)@/, '//****@');
     };
+    
     console.log('Checkout POST - NODE_ENV:', process.env.NODE_ENV, 'DATABASE_URL:', maskUrl(process.env.DATABASE_URL));
     console.log('Checkout body (email,tipoLivro):', { email: corpo?.email, tipoLivro: corpo?.tipoLivro });
     
@@ -16,50 +18,54 @@ export async function POST(request: Request) {
       cep, rua, numero, complemento, bairro, cidade, estado 
     } = corpo;
 
-    // 1. Cria ou busca o cliente baseado no e-mail (evita duplicar o cliente se ele comprar de novo)
-    try {
-      const cliente = await prisma.cliente.upsert({
+    // Validação básica para evitar NaN ou quebras no banco
+    if (!email || !tipoLivro || !valorTotal) {
+      return NextResponse.json({ error: 'Dados obrigatórios ausentes.' }, { status: 400 });
+    }
+
+    // 1. Cria ou busca o cliente baseado no e-mail
+    const cliente = await prisma.cliente.upsert({
       where: { email },
       update: { nome, telefone },
       create: { nome, email, telefone },
     });
 
     // 2. Se for livro físico, salva o endereço atrelado a esse cliente
-      if (tipoLivro === 'fisico') {
-        await prisma.endereco.create({
-          data: {
-            clienteId: cliente.id,
-            cep,
-            rua,
-            numero,
-            complemento,
-            bairro,
-            cidade,
-            estado,
-          },
-        });
-      }
+    if (tipoLivro === 'fisico') {
+      await prisma.endereco.create({
+        data: {
+          clienteId: cliente.id,
+          cep: cep || '',
+          rua: rua || '',
+          numero: numero || '',
+          complemento: complemento || '',
+          bairro: bairro || '',
+          cidade: cidade || '',
+          estado: estado || '',
+        },
+      });
+    }
 
     // 3. Registra o pedido como "pendente" no banco de dados
-      const pedido = await prisma.pedido.create({
+    const pedido = await prisma.pedido.create({
       data: {
         clienteId: cliente.id,
         tipoLivro,
-        valorTotal: Number(valorTotal),
+        valorTotal: Number(valorTotal) || 0,
         statusPagamento: 'pendente',
-        statusEnvio: 'nao_aplicavel',
+        statusEnvio: tipoLivro === 'ebook' ? 'nao_aplicavel' : 'pendente',
       },
     });
 
     // 4. Criar preferência no Mercado Pago
-      try {
+    try {
       const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
       console.log('Mercado Pago token present:', !!MP_ACCESS_TOKEN);
 
       if (!MP_ACCESS_TOKEN) {
-        console.warn('MERCADO_PAGO_ACCESS_TOKEN não definido — retornando apenas pedido salvo.');
+        console.warn('MERCADO_PAGO_ACCESS_TOKEN não definido — retornando apenas pedido salvou.');
         return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
       }
 
@@ -85,7 +91,7 @@ export async function POST(request: Request) {
         auto_return: 'approved',
       };
 
-        const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,27 +100,24 @@ export async function POST(request: Request) {
         body: JSON.stringify(mpBody),
       });
 
-        if (!mpRes.ok) {
-          const txt = await mpRes.text();
-          console.error('Erro criando preferência MP:', mpRes.status, txt);
-          return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
-        }
-
-        const pref = await mpRes.json();
-
-        // Retorna a URL de checkout para o frontend redirecionar
-        return NextResponse.json({ success: true, pedidoId: pedido.id, preferenceUrl: pref.init_point }, { status: 201 });
-      } catch (mpError) {
-        console.error('Erro na integração com Mercado Pago:', mpError);
+      if (!mpRes.ok) {
+        const txt = await mpRes.text();
+        console.error('Erro criando preferência MP:', mpRes.status, txt);
         return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
       }
-    } finally {
-      // Do not disconnect shared client here; let process exit handle it.
+
+      const pref = await mpRes.json();
+
+      // Retorna a URL de checkout para o frontend redirecionar
+      return NextResponse.json({ success: true, pedidoId: pedido.id, preferenceUrl: pref.init_point }, { status: 201 });
+      
+    } catch (mpError) {
+      console.error('Erro na integração com Mercado Pago:', mpError);
+      return NextResponse.json({ success: true, pedidoId: pedido.id }, { status: 201 });
     }
 
   } catch (error: any) {
     console.error('Erro no Checkout API:', error?.message || error, error?.stack || 'no-stack');
-    const devMsg = process.env.NODE_ENV !== 'production' ? (error?.message || String(error)) : 'Erro interno ao salvar o pedido.';
-    return NextResponse.json({ error: devMsg }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno ao salvar o pedido.' }, { status: 500 });
   }
 }
